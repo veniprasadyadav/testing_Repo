@@ -8,13 +8,6 @@ const router = Router();
 router.all(
   "/webhook/linkedin/challenge",
   // express.raw gives you the exact Buffer sent by LinkedIn
-  express.raw({ type: "*/*" }),
-  // convert Buffer -> string and expose as req.rawBody (typed above)
-  (req: any, _res, next) => {
-    // Note: req.body here is a Buffer because we used express.raw()
-    req.rawBody = (req.body && req.body.toString("utf8")) || "";
-    next();
-  },
   linkedinWebhooks
 );
 

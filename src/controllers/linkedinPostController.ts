@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import * as crypto from "crypto";
 
-const CLIENT_SECRET :string=process.env.LINKEDIN_CLIENT_SECRET!  ;
+const CLIENT_SECRET: string = process.env.LINKEDIN_CLIENT_SECRET!;
 
 function computeHmacHex(payload: string) {
   return crypto
@@ -35,39 +35,55 @@ export const linkedinWebhooks = (req: Request, res: Response) => {
 
   // Event (POST) - verify signature
   if (req.method === "POST") {
-    const signatureHeader = req.headers["x-li-signature"] as string | undefined;
-    const rawBody = req.rawBody ?? "";
-    console.log("rawBody ============: ===============", rawBody);
-    if (!signatureHeader) {
-      console.warn("No X-LI-Signature header");
+    const signature: string | undefined = req.header("X-LinkedIn-Signature");
+
+    if (
+      !req.rawBody ||
+      !signature ||
+      !isSignatureValid(req.rawBody, signature, CLIENT_SECRET)
+    ) {
+      // A 401 Unauthorized is appropriate here if the signature fails validation.
+      console.error("Invalid signature: Unauthorized access attempt.");
       return res.status(401).send("Unauthorized");
     }
 
-    const computed = computeHmacHex(rawBody);
+    // Signature valid. Process the event.
+    console.log("Received a valid event:", req.body);
 
-    console.log("LinkedIn signature:", signatureHeader);
-    console.log("Computed signature:", computed);
+    // Add your logic to process the specific event types here
 
-    if (computed !== signatureHeader) {
-      console.warn("Signature mismatch");
-      return res.status(401).send("Unauthorized");
-    }
-
-    // signature ok — parse payload
-    let body: any;
-    try {
-      body = JSON.parse(rawBody);
-    } catch (err) {
-      console.error("Failed to parse rawBody JSON", err);
-      return res.status(400).send("Bad Request");
-    }
-
-    console.log("Received LinkedIn webhook event:", JSON.stringify(body));
-    // Example dedupe (optional): body.notifications[0].notificationId
-
-    // Always respond quickly with 2xx
-    return res.status(200).send("OK");
+    // LinkedIn expects a 200 OK response quickly upon success
+    return res.status(200).send("Event received and processed.");
   }
 
-  return res.status(405).send("Method Not Allowed");
+  // Handle other methods not implemented
+  res.status(405).send("Method Not Allowed");
 };
+
+function isSignatureValid(
+  rawBody: Buffer,
+  signature: string,
+  secret: string
+): boolean {
+  // LinkedIn requires the signature to be prefixed with 'hmacsha256='
+  const expectedSignaturePrefix = "hmacsha256=";
+  if (!signature.startsWith(expectedSignaturePrefix)) {
+    return false;
+  }
+
+  const linkedInHash: string = signature.substring(
+    expectedSignaturePrefix.length
+  );
+
+  // Calculate HMAC-SHA256 hash of the raw request body using your client secret
+  const hash: string = crypto
+    .createHmac("sha256", secret)
+    .update(rawBody)
+    .digest("hex");
+
+  // Use timingSafeEqual for security against timing attacks
+  return crypto.timingSafeEqual(
+    Buffer.from(hash, "hex"),
+    Buffer.from(linkedInHash, "hex")
+  );
+}
