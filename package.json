@@ -2,7 +2,7 @@
   "name": "linkedin-webhook-ts",
   "version": "1.0.0",
   "description": "LinkedIn webhook listener using TypeScript and Express",
- "type": "commonjs",
+  "type": "commonjs",
   "main": "dist/src/server.js",
   "scripts": {
     "dev": "ts-node-dev --respawn --transpile-only --ignore-watch node_modules src/server.ts",
