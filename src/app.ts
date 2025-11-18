@@ -8,5 +8,8 @@ app.use(express.json());
 
 // add the route group
 app.use("/api/v1/social-blogs", socialBlogRouter);
+app.get("/", (req, res) => {
+  res.send("Welcome to the LinkedIn Webhook Listener API");
+});
 
 export default app;
