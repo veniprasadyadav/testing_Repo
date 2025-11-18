@@ -1,14 +1,13 @@
 import { Router } from "express";
-import express from "express";
+import express from "express"; 
 import { linkedinWebhooks } from "../controllers/linkedinPostController";
 
 const router = Router();
 
-// LinkedIn webhook: capture raw body only for this route
+// 👇 This ensures req.body is a Buffer *only* for this specific route
 router.all(
   "/webhook/linkedin/challenge",
-  express.raw({ type: '*/*' }), 
-  // express.raw gives you the exact Buffer sent by LinkedIn
+  express.raw({ type: 'application/json' }), // Restricts the type to JSON as LinkedIn sends
   linkedinWebhooks
 );
 
