@@ -87,6 +87,8 @@ function isSignatureValid(
     .update(rawBody)
     .digest("hex");
 
+  console.log("Calculated hash:", hash);
+  console.log("LinkedIn hash:", linkedInHash);
   // Use timingSafeEqual for security against timing attacks
   return crypto.timingSafeEqual(
     Buffer.from(hash, "hex"),
