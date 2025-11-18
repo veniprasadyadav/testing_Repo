@@ -38,9 +38,14 @@ export const linkedinWebhooks = (req: Request, res: Response) => {
     const signature: string | undefined = req.header("x-li-signature");
     console.log("Verifying signature:", signature);
     console.log("Raw body for signature verification:", req.rawBody);
+    console.log("CLIENT_SECRET:", CLIENT_SECRET);
     console.log(
       "Computed HMAC:",
       computeHmacHex(req.rawBody?.toString() || "")
+    );
+    console.log(
+      "issignatureValid :",
+      isSignatureValid(req.rawBody!, signature || "", CLIENT_SECRET)
     );
 
     if (
