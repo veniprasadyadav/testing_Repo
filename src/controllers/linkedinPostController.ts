@@ -35,7 +35,7 @@ export const linkedinWebhooks = (req: Request, res: Response) => {
 
   // Event (POST) - verify signature
   if (req.method === "POST") {
-    const signature: string | undefined = req.header("X-LinkedIn-Signature");
+    const signature: string | undefined = req.header("x-li-signature");
     console.log("Verifying signature:", signature);
     console.log("Raw body for signature verification:", req.rawBody);
     console.log(
