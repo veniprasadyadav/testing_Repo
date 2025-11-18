@@ -78,6 +78,10 @@ function isSignatureValid(
 ): boolean {
   // LinkedIn requires the signature to be prefixed with 'hmacsha256='
   const expectedSignaturePrefix = "hmacsha256=";
+  console.log(
+    "Expected signature prefix:",
+    signature.startsWith(expectedSignaturePrefix)
+  );
   if (!signature.startsWith(expectedSignaturePrefix)) {
     return false;
   }
