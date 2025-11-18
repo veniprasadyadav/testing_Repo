@@ -1,13 +1,12 @@
 import { Router } from "express";
-import express from "express"; 
+// express import is no longer needed here if it's just routing
 import { linkedinWebhooks } from "../controllers/linkedinPostController";
 
 const router = Router();
 
-// 👇 This ensures req.body is a Buffer *only* for this specific route
+// Remove express.raw() here. The global middleware handles the raw body capture.
 router.all(
   "/webhook/linkedin/challenge",
-  express.raw({ type: 'application/json' }), // Restricts the type to JSON as LinkedIn sends
   linkedinWebhooks
 );
 

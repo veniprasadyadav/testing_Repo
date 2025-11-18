@@ -36,58 +36,54 @@ export const linkedinWebhooks = (req: Request, res: Response) => {
 
   // Event (POST) - verify signature
   if (req.method === "POST") {
-    const signature: string | undefined = req.header("x-li-signature");
-
-    // Now req.body *is* the Buffer because of express.raw() middleware
-    const rawBodyBuffer = req.body;
-
-    // Add checks to handle potential errors gracefully
-    if (!Buffer.isBuffer(rawBodyBuffer)) {
-      console.error("Error: req.body is not a buffer, middleware failed.");
-      return res
-        .status(500)
-        .send("Internal Server Error: Body parsing failed.");
-    }
+    const signature: string | undefined = req.header("x-li-signature"); 
+    
+    // 👇 Use req.rawBody which was populated by the global middleware
+    const rawBodyBuffer: Buffer | undefined = (req as any).rawBody; 
 
     console.log("Verifying signature:", signature);
     console.log("Raw body is Buffer:", Buffer.isBuffer(rawBodyBuffer)); // Should now be true
+    
+    // Ensure we have both raw body and signature
+    if (!rawBodyBuffer || !signature) {
+        console.error("Missing raw body or signature.");
+        return res.status(401).send("Unauthorized: Missing data");
+    }
+
     console.log(
       "Computed HMAC:",
       computeHmacHex(rawBodyBuffer) // Pass the buffer directly
     );
-
+    
     if (
-      !signature ||
       !isSignatureValid(rawBodyBuffer, signature, CLIENT_SECRET)
     ) {
       console.error("Invalid signature: Unauthorized access attempt.");
-      return res.status(401).send("Unauthorized");
+      return res.status(401).send("Unauthorized: Invalid Signature");
     }
 
     // Signature valid. Process the event.
     console.log("Received a valid event.");
-    // You can parse the JSON content from the buffer if needed:
-    // const eventData = JSON.parse(rawBodyBuffer.toString('utf8'));
+    console.log("Event JSON Body:", req.body); // req.body is automatically JSON object here
 
     return res.status(200).send("Event received and processed.");
   }
   res.status(405).send("Method Not Allowed");
 };
 
-// ... (isSignatureValid function remains unchanged and works correctly) ...
+// ... (isSignatureValid function is correct) ...
 function isSignatureValid(
   rawBody: Buffer,
   signature: string,
   secret: string
 ): boolean {
+  // LinkedIn requires the signature to be prefixed with 'hmacsha256='
   const expectedSignaturePrefix = "hmacsha256=";
   if (!signature.startsWith(expectedSignaturePrefix)) {
     console.log("Signature does not start with expected prefix.");
     return false;
   }
-  const linkedInHash: string = signature.substring(
-    expectedSignaturePrefix.length
-  );
+  const linkedInHash: string = signature.substring(expectedSignaturePrefix.length);
   const hash: string = crypto
     .createHmac("sha256", secret)
     .update(rawBody)
